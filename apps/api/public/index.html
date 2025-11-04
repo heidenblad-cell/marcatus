@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Marcatus – Assets</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;margin:24px;max-width:1000px}
+    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+    input,select,button{padding:8px;margin-right:8px}
+    table{border-collapse:collapse;width:100%}
+    th,td{border-bottom:1px solid #eee;padding:8px;text-align:left}
+    tr:hover{background:#fafafa}
+    small{color:#666}
+    #pagination{margin-top:16px;display:flex;gap:8px}
+    #pagination button{padding:6px 12px;border:none;border-radius:6px;background:#222;color:#fff;cursor:pointer}
+    #pagination button:disabled{background:#aaa;cursor:not-allowed}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Marcatus Assets</h1>
+    <small id="status">loading…</small>
+  </header>
+
+  <div>
+    <input id="q" placeholder="Search text (optional)" />
+    <select id="category">
+      <option value="">All categories</option>
+      <option value="bond">bond</option>
+      <option value="real-estate">real-estate</option>
+      <option value="commodity">commodity</option>
+      <option value="energy">energy</option>
+    </select>
+    <button id="btnSearch">Search</button>
+  </div>
+
+  <table id="tbl">
+    <thead>
+      <tr><th>Title</th><th>Chain</th><th>Category</th><th>Source</th><th>Created</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <div id="pagination">
+    <button id="prevBtn" disabled>Prev</button>
+    <span id="pageInfo"></span>
+    <button id="nextBtn" disabled>Next</button>
+  </div>
+
+  <pre id="details" style="background:#0b1020;color:#d7e0ff;padding:12px;border-radius:8px;white-space:pre-wrap;margin-top:16px;display:none;"></pre>
+
+<script>
+let currentPage = 0;
+const pageSize = 5;
+let total = 0;
+
+async function fetchAssets(params={}) {
+  const qs = new URLSearchParams(params);
+  const res = await fetch('/assets/search?' + qs.toString());
+  if (!res.ok) throw new Error('API error');
+  return res.json();
+}
+async function fetchAsset(id){
+  const res = await fetch('/assets/' + id);
+  if (!res.ok) throw new Error('Not found');
+  return res.json();
+}
+function row(a){
+  const tr = document.createElement('tr');
+  tr.innerHTML = \`
+    <td><a href="#" data-id="\${a.id}">\${a.title}</a></td>
+    <td>\${a.chain}</td>
+    <td>\${a.category}</td>
+    <td>\${a.source}</td>
+    <td><small>\${a.created_at}</small></td>
+  \`;
+  tr.querySelector('a').addEventListener('click', async (e)=>{
+    e.preventDefault();
+    const data = await fetchAsset(a.id);
+    const box = document.getElementById('details');
+    box.style.display = 'block';
+    box.textContent = JSON.stringify(data, null, 2);
+  });
+  return tr;
+}
+
+async function load(){
+  document.getElementById('status').textContent = 'loading…';
+  const q = document.getElementById('q').value.trim();
+  const category = document.getElementById('category').value.trim();
+  const offset = currentPage * pageSize;
+  const params = { limit: pageSize, offset };
+  if (q) params.q = q;
+  if (category) params.category = category;
+  const data = await fetchAssets(params);
+  total = data.total;
+  const body = document.querySelector('#tbl tbody');
+  body.innerHTML = '';
+  data.results.forEach(a => body.appendChild(row(a)));
+  document.getElementById('status').textContent = \`\${data.count}/\${data.total} shown\`;
+  updatePagination();
+}
+function updatePagination(){
+  const totalPages = Math.ceil(total / pageSize);
+  document.getElementById('pageInfo').textContent = \`Page \${currentPage + 1} of \${totalPages || 1}\`;
+  document.getElementById('prevBtn').disabled = currentPage === 0;
+  document.getElementById('nextBtn').disabled = currentPage + 1 >= totalPages;
+}
+document.getElementById('prevBtn').addEventListener('click', ()=>{ if(currentPage>0){currentPage--;load();}});
+document.getElementById('nextBtn').addEventListener('click', ()=>{currentPage++;load();});
+document.getElementById('btnSearch').addEventListener('click', ()=>{currentPage=0;load();});
+load();
+</script>
+</body>
+</html>
