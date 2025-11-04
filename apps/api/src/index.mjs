@@ -1,15 +1,57 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { spawn } from 'child_process';
 import { db } from './db.mjs';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
+// --- Static UI ---
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const publicDir = path.join(__dirname, '../public');
+app.use(express.static(publicDir));
+app.get('/', (_req, res) => res.sendFile(path.join(publicDir, 'index.html')));
+
+// --- Helper to run crawler once ---
+function runCrawlerOnce(res) {
+  try {
+    const defaultDataDir = path.resolve(__dirname, '../../../data');
+    const resolvedDbPath = process.env.DB_PATH || path.join(defaultDataDir, 'marcatus.db');
+    const crawlerEntry = path.resolve(__dirname, '../../../services/crawler/src/index.mjs');
+
+    const child = spawn(process.execPath, [crawlerEntry], {
+      env: { ...process.env, DB_PATH: resolvedDbPath },
+      stdio: ['ignore', 'pipe', 'pipe']
+    });
+
+    let stdout = '', stderr = '';
+    child.stdout.on('data', d => (stdout += d.toString()));
+    child.stderr.on('data', d => (stderr += d.toString()));
+    child.on('close', code => {
+      res.setHeader('Content-Type', 'application/json');
+      if (code === 0) return res.status(200).json({ ok: true, message: 'Crawler ran', stdout });
+      return res.status(500).json({ ok: false, code, stdout, stderr });
+    });
+  } catch (err) {
+    res.setHeader('Content-Type', 'application/json');
+    return res.status(500).json({ ok: false, error: String(err) });
+  }
+}
+
+// --- Admin endpoints (DEV ONLY) ---
+app.post('/admin/run-crawler', (req, res) => runCrawlerOnce(res));
+// Convenience for testing in browser:
+app.get('/admin/run-crawler', (req, res) => runCrawlerOnce(res));
+
+// --- Health ---
 app.get('/health', (_req, res) => res.json({ ok: true, service: 'api' }));
 
-// Latest (unchanged)
+// --- Latest ---
 app.get('/assets/latest', (_req, res) => {
   const rows = db.prepare(`
     SELECT id, title, chain, category, source, created_at
@@ -20,7 +62,7 @@ app.get('/assets/latest', (_req, res) => {
   res.json({ count: rows.length, results: rows });
 });
 
-// Get by id
+// --- By ID ---
 app.get('/assets/:id', (req, res) => {
   const row = db.prepare(`
     SELECT id, title, chain, category, source, created_at
@@ -31,15 +73,7 @@ app.get('/assets/:id', (req, res) => {
   res.json(row);
 });
 
-/**
- * Advanced search with filters & pagination
- * Query params:
- *  - q: free text (matches title or chain)
- *  - chain: exact chain match (e.g., ExampleNet)
- *  - category: exact category (e.g., energy, bond)
- *  - limit: 1..100 (default 25)
- *  - offset: >=0 (default 0)
- */
+// --- Search with filters & pagination ---
 app.get('/assets/search', (req, res) => {
   const q = (req.query.q ?? '').toString().trim();
   const chain = (req.query.chain ?? '').toString().trim();
@@ -50,19 +84,9 @@ app.get('/assets/search', (req, res) => {
   const where = [];
   const params = [];
 
-  if (q) {
-    where.push('(title LIKE ? OR chain LIKE ?)');
-    const like = `%${q}%`;
-    params.push(like, like);
-  }
-  if (chain) {
-    where.push('chain = ?');
-    params.push(chain);
-  }
-  if (category) {
-    where.push('category = ?');
-    params.push(category);
-  }
+  if (q) { const like = `%${q}%`; where.push('(title LIKE ? OR chain LIKE ?)'); params.push(like, like); }
+  if (chain) { where.push('chain = ?'); params.push(chain); }
+  if (category) { where.push('category = ?'); params.push(category); }
 
   const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
 
@@ -80,12 +104,7 @@ app.get('/assets/search', (req, res) => {
     ${whereSql}
   `).get(...params).c;
 
-  res.json({
-    query: { q, chain, category, limit, offset },
-    total,
-    count: rows.length,
-    results: rows
-  });
+  res.json({ query: { q, chain, category, limit, offset }, total, count: rows.length, results: rows });
 });
 
 const PORT = Number(process.env.API_PORT ?? 4000);
