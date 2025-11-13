@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Marcatus – Internal Console</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-store" />
+  <style>
+    :root{--fg:#111;--muted:#666;--line:#e9e9e9;--bg:#fff;--primary:#111}
+    *{box-sizing:border-box} body{margin:24px;font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--fg);background:var(--bg);max-width:1100px}
+    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+    h1{font-size:28px;margin:0} .sub{color:var(--muted)}
+    .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+    input,select,button{padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#fff}
+    button{background:var(--primary);color:#fff;cursor:pointer} button:disabled{opacity:.5;cursor:not-allowed}
+    .btn{background:var(--primary);color:#fff}
+    .ghost{background:#fff;color:#111;border:1px solid var(--line)}
+    table{width:100%;border-collapse:collapse;margin-top:8px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+    th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left} th{background:#fafafa}
+    tr:hover td{background:#fcfcfc}
+    .meta{color:var(--muted);font-size:12px;margin-left:6px}
+    #pagination{display:flex;gap:8px;margin-top:12px}
+    #details{background:#0b1020;color:#d7e0ff;padding:12px;border-radius:10px;white-space:pre-wrap;margin-top:16px;display:none}
+    .pill{background:#f3f4f6;border:1px solid var(--line);border-radius:999px;padding:6px 10px}
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Marcatus – Internal Console</h1>
+      <div class="sub">Dev-only dashboard to verify the data flow (Crawler → DB → API → UI)</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <div id="status" class="pill">Loading…</div>
+      <button id="btnLogin" class="ghost">Admin Login</button>
+      <button id="btnLogout" class="ghost" style="display:none">Logout</button>
+    </div>
+  </header>
+<div class="card"><h3>Admin Status</h3><div id="status">Loading...</div><div style="margin-top:8px"><button id="refreshStatus">Refresh</button></div></div>
+
+<div class="card"><h3>Admin Status</h3><div id="status">Loading...</div><div style="margin-top:8px"><button id="refreshStatus">Refresh</button></div></div>
+
+
+  <div class="bar">
+    <input id="q" placeholder="Search text (optional)" />
+    <select id="category">
+      <option value="">All categories</option>
+      <option value="bond">bond</option>
+      <option value="real-estate">real-estate</option>
+      <option value="commodity">commodity</option>
+      <option value="energy">energy</option>
+    </select>
+    <select id="chain">
+      <option value="">All chains</option>
+      <option value="ExampleNet">ExampleNet</option>
+    </select>
+    <button id="btnSearch" class="btn">Search</button>
+    <button id="btnReset" class="ghost" title="Clear filters">Reset</button>
+    <span id="stats" class="meta"></span>
+  </div>
+
+  <div class="bar">
+    <button id="runCrawlerBtn" class="btn" style="display:none">Run Crawler Now</button>
+    <span id="adminMsg" class="meta"></span>
+  </div>
+
+  <table id="tbl">
+    <thead>
+      <tr><th>Title</th><th>Chain</th><th>Category</th><th>Source</th><th>Created</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <div id="pagination">
+    <button id="prevBtn" class="ghost" disabled>Prev</button>
+    <span id="pageInfo" class="meta"></span>
+    <button id="nextBtn" class="ghost" disabled>Next</button>
+  </div>
+
+  <pre id="details"></pre>
+
+<script>
+let currentPage = 0;
+const pageSize = 5;
+let total = 0;
+let adminKey = localStorage.getItem('adminKey') || '';
+
+function setAdminUI(loggedIn){
+  document.getElementById('btnLogin').style.display  = loggedIn ? 'none' : 'inline-block';
+  document.getElementById('btnLogout').style.display = loggedIn ? 'inline-block' : 'none';
+  document.getElementById('runCrawlerBtn').style.display = loggedIn ? 'inline-block' : 'none';
+}
+
+async function fetchJSON(url, options){
+  const headers = (options && options.headers) ? options.headers : {};
+  const r = await fetch(url, { ...options, headers });
+  const text = await r.text();
+  try { return { ok: r.ok, data: JSON.parse(text), raw: text }; }
+  catch { return { ok: r.ok, data: null, raw: text }; }
+}
+
+async function heartbeat(){
+  const st = document.getElementById('status');
+  const stats = document.getElementById('stats');
+  const a = await fetchJSON('/health');
+  const b = await fetchJSON('/assets/stats');
+  if (a.ok && a.data && b.ok && b.data){
+    st.textContent = 'API OK';
+    stats.textContent = `total: ${b.data.total}` + (b.data.latest_created_at ? ` • latest: ${b.data.latest_created_at}` : '');
+  } else {
+    st.textContent = 'API issue'; stats.textContent = '';
+  }
+}
+
+async function fetchAssets(params={}){
+  const qs = new URLSearchParams(params);
+  const { ok, data, raw } = await fetchJSON('/assets/search?' + qs.toString());
+  if (!ok || !data) throw new Error(raw.slice(0,200));
+  return data;
+}
+async function fetchAsset(id){
+  const { ok, data, raw } = await fetchJSON('/assets/' + id);
+  if (!ok || !data) throw new Error(raw.slice(0,200));
+  return data;
+}
+
+function row(a){
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><a href="#" data-id="${a.id}">${a.title}</a></td>
+    <td>${a.chain}</td>
+    <td>${a.category}</td>
+    <td>${a.source}</td>
+    <td><small>${a.created_at}</small></td>
+  `;
+  tr.querySelector('a').addEventListener('click', async (e)=>{
+    e.preventDefault();
+    const data = await fetchAsset(a.id);
+    const box = document.getElementById('details');
+    box.style.display = 'block';
+    box.textContent = JSON.stringify(data, null, 2);
+  });
+  return tr;
+}
+
+async function load(params={}){
+  document.getElementById('status').textContent = 'Loading…';
+  const data = await fetchAssets(params);
+  total = data.total;
+  const body = document.querySelector('#tbl tbody');
+  body.innerHTML = '';
+  data.results.forEach(a => body.appendChild(row(a)));
+  document.getElementById('status').textContent = 'API OK';
+  updatePagination();
+}
+
+function collectFilters(){
+  const q = document.getElementById('q').value.trim();
+  const category = document.getElementById('category').value.trim();
+  const chain = document.getElementById('chain').value.trim();
+  const offset = currentPage * pageSize;
+  const params = { limit: pageSize, offset };
+  if (q) params.q = q;
+  if (category) params.category = category;
+  if (chain) params.chain = chain;
+  return params;
+}
+
+function updatePagination(){
+  const totalPages = Math.ceil(total / pageSize) || 1;
+  document.getElementById('pageInfo').textContent = `Page ${currentPage + 1} of ${totalPages}`;
+  document.getElementById('prevBtn').disabled = currentPage === 0;
+  document.getElementById('nextBtn').disabled = currentPage + 1 >= totalPages;
+}
+
+document.getElementById('prevBtn').addEventListener('click', async ()=>{
+  if (currentPage>0){ currentPage--; await load(collectFilters()); }
+});
+document.getElementById('nextBtn').addEventListener('click', async ()=>{
+  currentPage++; await load(collectFilters());
+});
+document.getElementById('btnSearch').addEventListener('click', async ()=>{
+  currentPage=0; await load(collectFilters());
+});
+document.getElementById('btnReset').addEventListener('click', async ()=>{
+  document.getElementById('q').value='';
+  document.getElementById('category').value='';
+  document.getElementById('chain').value='';
+  currentPage=0; await load({ limit: pageSize, offset: 0 });
+});
+
+// Admin login/logout
+document.getElementById('btnLogin').addEventListener('click', async ()=>{
+  const k = prompt('Enter ADMIN_KEY');
+  if (!k) return;
+  // quick ping to validate
+  const r = await fetchJSON('/admin/ping', { headers: { 'x-admin-key': k } });
+  if (r.ok && r.data && r.data.ok){
+    adminKey = k;
+    localStorage.setItem('adminKey', k);
+    setAdminUI(true);
+  } else {
+    alert('Invalid key');
+  }
+});
+document.getElementById('btnLogout').addEventListener('click', ()=>{
+  localStorage.removeItem('adminKey');
+  adminKey = '';
+  setAdminUI(false);
+  document.getElementById('adminMsg').textContent = '';
+});
+
+document.getElementById('runCrawlerBtn').addEventListener('click', async ()=>{
+  const btn = document.getElementById('runCrawlerBtn');
+  const msg = document.getElementById('adminMsg');
+  btn.disabled = true;
+  msg.textContent = 'Running crawler…';
+  try{
+    const { ok, data, raw } = await fetchJSON('/admin/run-crawler', {
+      method: 'POST',
+      headers: { 'x-admin-key': adminKey }
+    });
+    if(!ok || !data || !data.ok){ throw new Error((data && (data.stderr || data.message)) || raw); }
+    await load(collectFilters()); await heartbeat();
+    msg.textContent = 'Done.';
+  }catch(err){ msg.textContent = 'Error: ' + (err.message || err); }
+  finally{ btn.disabled = false; }
+});
+
+// Initial
+(async ()=>{
+  setAdminUI(!!adminKey);
+  await heartbeat();
+  await load({ limit: pageSize, offset: 0 });
+  setInterval(heartbeat, 5000);
+})();
+</script>
+<script src="snippet-admin-status.js"></script>
+<script>document.getElementById("refreshStatus")?.addEventListener("click", loadStatus); if(localStorage.getItem("marcatus_admin_key")) loadStatus();</script>
+<script src="snippet-admin-status.js"></script>
+<script>document.getElementById("refreshStatus")?.addEventListener("click", loadStatus); if(localStorage.getItem("marcatus_admin_key")) loadStatus();</script>
+</body>
+</html>

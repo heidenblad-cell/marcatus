@@ -1,0 +1,12 @@
+{
+  "name": "@marcatus/crawler",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.mjs"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.6.0",
+    "dotenv": "^16.4.5"
+  }
+}
