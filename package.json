@@ -1,0 +1,22 @@
+{
+  "name": "marcatus-pro",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev:api": "npm --prefix apps/api run dev",
+    "dev:crawler": "npm --prefix apps/crawler run dev",
+    "dev:web": "npm --prefix apps/web run dev",
+    "dev:all": "concurrently -n API,CRAWLER,WEB -c blue,magenta,green \"npm:dev:api\" \"npm:dev:crawler\" \"npm:dev:web\"",
+    "build:api": "cd apps/api && tsc -p .",
+    "build:crawler": "cd apps/crawler && tsc -p .",
+    "build:web": "cd apps/web && vite build",
+    "build": "npm run build:api && npm run build:crawler && npm run build:web",
+    "bootstrap": "npm install && (cd apps/api && npm install) && (cd apps/crawler && npm install) && (cd apps/web && npm install) && npm run dev:all"
+  },
+  "dependencies": {
+    "concurrently": "^9.1.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.6"
+  }
+}

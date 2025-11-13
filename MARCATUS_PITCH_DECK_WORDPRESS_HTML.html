@@ -1,0 +1,352 @@
+<pre><code>MARCATUS PITCH DECK
+===================
+
+TITLE & MISSION
+---------------
+
+Headline: Marcatus — The Neutral Exchange Layer for Real-World Assets
+
+Mission: Connect every verified real-world asset to global liquidity. 
+Any KYC/AML-cleared participant can discover, compare, and swap assets 
+across chains in real time. No lock-ins. No walled gardens.
+
+
+WHY NOW
+-------
+
+• On-chain RWAs are inflecting: tokenized treasuries, real estate, 
+  invoices, music/IP, energy credits, fund shares, collectibles
+
+• Fragmentation is the blocker: multiple chains (ETH, Base, Solana, 
+  Polygon, Avalanche, BSC, L2s), multiple standards (ERC-20/721/1155/3643, 
+  SPL, etc.), siloed marketplaces
+
+• Institutions demand compliance-aware rails: KYC/AML, allowlists, 
+  transfer restrictions, proof-of-ownership, disclosures
+
+• Winners will be neutral routers that unify discovery, compliance 
+  signals, and settlement—not walled gardens
+
+
+THE PROBLEM
+-----------
+
+• RWA issuers rebuild the same plumbing: discovery, investor onboarding, 
+  compliance checks, secondary liquidity, cross-chain UX
+
+• Buyers can't find inventory or trust metadata; disclosures are 
+  scattered; contracts vary widely
+
+• Marketplaces are chain-siloed; liquidity is thin and fractured
+
+• Compliance is bolted on after the fact; transfers break rules or 
+  block legitimate transfers
+
+
+THE SOLUTION: MARCATUS EXCHANGE LAYER
+-------------------------------------
+
+Unified Discovery & Indexing
+• Crawler ingests RWA projects across public chains, permissioned 
+  ledgers, custodial platforms
+• Normalizes metadata, disclosures, provenance
+• Surfaces docs, images, on-chain data
+
+Compliance-Aware Trading
+• Respects token rules (allowlists, transfer restrictions, jurisdictions)
+• KYC/AML-cleared user flows
+• Rule evaluation before execution
+
+Cross-Chain Liquidity Routing
+• Abstracts bridges/DEXs
+• Orchestrates swaps where liquidity and compliance overlap
+
+Offer/Exchange Engine
+• Bilateral swaps and bids across any supported RWA standard
+• Automated exchange proposals based on user preferences
+
+Developer-First APIs
+• Open, documented endpoints for issuers, brokers, wallets
+• Webhooks, SDKs, integration playbooks
+
+
+WHAT WE SOLVE
+-------------
+
+For Issuers:
+• Instant distribution to multi-chain audience
+• Standardized listings & disclosures
+• Liquidity access without rebuilding marketplace infra
+• Built-in compliance signals and transfer checks
+
+For Investors/Traders:
+• Single interface to browse, compare, trade RWAs across chains
+• Verifiable metadata & documents
+• Alerts, watchlists, automated exchange proposals
+• Transparent fees, predictable settlement
+
+
+COVERAGE DEPTH: PERMISSIONED & CUSTODIAL
+----------------------------------------
+
+How We Integrate Without Breaking Compliance:
+
+• Adapter Library: Connectors for permissioned ledgers (Hyperledger, 
+  Corda, bank-hosted networks) via compliance-approved APIs or 
+  read-only nodes
+
+• Custodial Integrations: SOC2-compliant data bridges with legal 
+  agreements; we ingest state changes without taking custody
+
+• Onboarding Speed: 4-week average integration (schema mapping, 
+  compliance review, attestation exchange)
+
+• Self-Service Playbooks: Partners can self-onboard with our support
+
+
+DATA INTEGRITY & TRUST
+----------------------
+
+Normalization Pipeline:
+• Structured schema with provenance tagging
+• Checksum verification, document hash comparisons (IPFS/Arweave)
+
+Verification:
+• Multi-source reconciliation (on-chain events, issuer attestations, 
+  custodian feeds)
+• Confidence scores exposed to users
+
+Event Reconciliation:
+• Time-series ledger per asset with audit trails
+• Anomalies trigger AI-assisted review and manual escalation
+
+Compliance Graph:
+• Maps token-level rules to user eligibility
+• Updated via automated rule ingestion plus issuer sign-off
+
+
+SWAP SETTLEMENT ASSURANCE
+-------------------------
+
+Atomicity Engine:
+• Prefers native atomic swap mechanisms where available 
+  (HTLC variants, cross-chain messaging)
+
+Risk-Managed Fallback:
+• Escrow smart contracts with time-locked exits
+• Third-party custody or insurance options for incompatible consensus
+
+Bridge Policy:
+• Curated list of audited connectors
+• On-chain proofs and SLAs
+• Failed settlements auto-rollback with full traceable logs
+
+
+GOVERNANCE & LEGAL NEUTRALITY
+-----------------------------
+
+Neutral Venue:
+• Marcatus never custodies assets
+• Coordinates compliant execution between user-controlled wallets 
+  and regulated custodians
+
+Jurisdiction Handling:
+• Per-asset rule profiles (transfer restrictions, eligible investors) 
+  enforced at execution
+• Pluggable KYC/AML providers mapped per region
+
+Regulatory Ops:
+• Dedicated legal/compliance team
+• Modular policy engine updated with jurisdictional changes
+
+Future Governance:
+• Open architecture moving toward DAO-led standards ratification
+• Compliance guardrails remain under regulated entity oversight
+
+
+PRODUCT STATUS (LIVE MODULES)
+-----------------------------
+
+✓ RWA Crawler & Indexer (multi-chain, permissioned connectors in pilot)
+✓ Asset Pages with docs, disclosures, provenance pointers
+✓ Search/Filters with compliance flags, chain, issuer, category
+✓ Offers & Exchange Engine with bilateral proposals
+✓ User Profiles with KYC status, notification settings
+✓ REST API, developer docs, webhooks
+✓ Web app + PWA parity, push notifications, background refresh
+
+
+ARCHITECTURE OVERVIEW
+--------------------
+
+Data Plane:
+• Multi-chain listeners, permissioned ledger adapters, custodial feeds
+• IPFS/Arweave fetchers, compliance rule evaluation
+
+Control Plane:
+• Offer routing, swap orchestration
+• Bridge/DEX aggregator layer, risk checks
+
+Experience Layer:
+• Web/PWA, dashboards, watchlists, alerts, analytics
+• Developer APIs & SDKs
+
+
+INTEROPERABILITY & STANDARDS
+----------------------------
+
+• EVM: ERC-20/721/1155, ERC-3643 (permissioned), extension via adapters
+• Non-EVM: SOL/SPL via adapter
+• Document Anchors: IPFS/Arweave with checksum verification
+• Identity/Compliance: Pluggable KYC/AML providers, allowlist proofs
+• Schema versioning ensures forward compatibility
+
+
+COMPLIANCE-FIRST DESIGN
+-----------------------
+
+• KYC/AML flows tailored per asset class/jurisdiction
+• Rule evaluation before settlement; audit trails for issuers/regulators
+• Disclosures attached to every listing; version history maintained
+• Jurisdiction filters surfaced to users; transfer attempts blocked 
+  if rules fail
+
+
+THE MOAT
+--------
+
+• The RWA Index: Normalized, queryable dataset spanning public, 
+  permissioned, and custodial domains
+
+• Compliance Knowledge Graph: Maps token rules ↔ user eligibility; 
+  grows more valuable with each integration
+
+• Neutral, open architecture attracts issuers, wallets, aggregators
+
+• Network effects via automated exchange proposals and bilateral matching
+
+• AI-Driven Crawler: Continuously expands coverage and accuracy
+
+
+BUSINESS MODEL
+--------------
+
+• Listing/processing fees for issuers (tiered compliance tooling)
+• Take-rate on successful exchanges/swaps
+• API subscriptions for data/analytics
+• Enterprise integrations & white-label portals
+
+
+GO-TO-MARKET PLAN
+----------------
+
+Phase 1: High-signal issuers (real estate, treasuries, revenue-backed notes)
+
+Phase 2: Wallet & broker integrations; push index/API to analyst desks
+
+Phase 3: Automated proposal network; institutional dashboards
+
+Phase 4: Liquidity partnerships with bridges, DEXs, OTC desks, custodians
+
+
+TRACTION & READINESS
+--------------------
+
+• Core modules built, demo environment live
+• Crawler indexing live projects; sample asset pages with disclosures
+• Mobile/PWA parity with notifications, saved filters
+• Issuer pipeline under NDA; compliance partners engaged
+• Ready to ship with funding to accelerate integrations and operations
+
+
+ROADMAP (NEXT 12 MONTHS)
+------------------------
+
+Q1–Q2:
+• Institutional KYC partnerships
+• Deep ERC-3643 support
+• Solana adapter v1
+• Permissioned ledger expansion
+
+Q2–Q3:
+• Bridge/DEX aggregator integrations
+• Automated exchange proposals at scale
+• Custody connectors
+
+Q3–Q4:
+• Issuer dashboards, analytics & compliance reporting
+• Enterprise pilots
+• DAO governance blueprint
+
+
+TEAM
+----
+
+Founder & Product: Andreas Heidenblad
+• RWA visionary with product/data background
+
+Engineering: Vetted contributors across adapters, indexing, security
+
+Advisors: Compliance, tokenization, marketplace ops (details under NDA)
+
+
+FUNDING ASK
+-----------
+
+Raise: $2.5M seed for 18-month runway
+
+Allocation:
+• 35% Engineering (adapters, Solana/EVM parity, bridge integrations)
+• 25% Compliance/Legal (KYC/AML providers, audits)
+• 25% GTM (issuer onboarding, integrations)
+• 15% Ops & Contingency
+
+Use of Funds: Launch production, accelerate integrations, capture 
+index leadership
+
+
+KPIs
+----
+
+• Indexed RWA projects & tokens
+• Monthly active traders / offers placed
+• Time-to-list for new issuers
+• Discovery → bid/swap conversion
+• Compliance pass rate (first-time)
+• Cross-chain liquidity routed
+• Compliance SLA (jurisdiction approval turnaround)
+
+
+RISKS & MITIGATION
+------------------
+
+Regulatory Drift:
+• Modular providers, jurisdiction filters, live disclosures, 
+  legal monitoring
+
+Settlement Risk:
+• Reputable bridge partners, cryptographic proofs, fail-safe rollback
+
+Standards Churn:
+• Adapter framework, schema versioning, community governance
+
+Data Quality:
+• Checksums, issuer-verified docs, community flags, anomaly detection
+
+
+WHY MARCATUS WINS
+-----------------
+
+• First neutral, compliance-aware exchange layer built for RWA fragmentation
+• Protocol- and chain-agnostic today; extensible to future standards
+• RWA index and compliance graph form defensible data moat
+• Product live, integrations in flight, team ready to execute
+
+
+CALL TO ACTION
+--------------
+
+Join us to launch the truly neutral exchange for real-world assets.
+
+Marcatus is ready to ship and scale.</code></pre>
+
